@@ -1,0 +1,6 @@
+{
+  "x86_64-unknown-linux-gnu": "lin-x64",
+  "x86_64-pc-windows-gnu": "win-x64",
+  "aarch64-unknown-linux-gnu": "lin-a64",
+  "armv7-unknown-linux-gnueabihf": "lin-a32"
+}

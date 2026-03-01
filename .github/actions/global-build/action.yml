@@ -11,7 +11,7 @@ runs:
   steps:
     - shell: bash
       run: |
-        MAP_PATH="${{ github.action_path }}/targets.json"
+        MAP_PATH="${{ github.workspace }}/targets.json"
         
         for TARGET in $(jq -r 'keys[]' "$MAP_PATH"); do
           SHORT=$(jq -r ".\"$TARGET\"" "$MAP_PATH")

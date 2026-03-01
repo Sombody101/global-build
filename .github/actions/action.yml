@@ -1,4 +1,11 @@
 name: 'Global Rust Compiler'
+description: 'Cross-compiles binaries based on a JSON target map'
+
+inputs:
+  bin_name:
+    description: 'Name of the binary to build'
+    required: true
+
 runs:
   using: "composite"
   steps:

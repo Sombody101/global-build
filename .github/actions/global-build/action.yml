@@ -9,9 +9,31 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Cache Cargo Dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cross-${{ inputs.bin_name }}-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cross-${{ inputs.bin_name }}-
+
+    - name: Ensure Cross is installed
+      shell: bash
+      run: |
+        if ! command -v cross &> /dev/null; then
+          echo "::group::Installing Cross"
+          curl -L https://github.com/cross-rs/cross/releases/latest/download/cross-x86_64-unknown-linux-musl.tar.gz | tar xz -C ~/.cargo/bin
+          echo "::endgroup::"
+        fi
+  
     - shell: bash
       run: |
-        MAP_PATH="${{ github.workspace }}/targets.json"
+        MAP_PATH="${{ github.action_path }}/targets.json"
         
         for TARGET in $(jq -r 'keys[]' "$MAP_PATH"); do
           SHORT=$(jq -r ".\"$TARGET\"" "$MAP_PATH")

@@ -42,6 +42,7 @@ runs:
           [[ "$TARGET" == *"windows"* ]] && EXT=".exe"
           
           echo "::group::Building $TARGET ($SHORT)"
+          export CARGO_APP_VERSION="${GITHUB_REF_NAME}"
           cross build --release --target "$TARGET"
           cp "target/$TARGET/release/${{ inputs.bin_name }}$EXT" "${{ inputs.bin_name }}-$SHORT$EXT"
           echo "::endgroup::"

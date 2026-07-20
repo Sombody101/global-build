@@ -31,7 +31,7 @@ runs:
           echo "::endgroup::"
         fi
   
-    - name: Build Shared Libraries Across Targets
+    - name: Build and Package Binaries & Shared Libraries
       shell: bash
       run: |
         MAP_PATH="${{ github.action_path }}/targets.json"
@@ -40,11 +40,17 @@ runs:
           SHORT=$(jq -r ".\"$TARGET\"" "$MAP_PATH")
           
           if [[ "$TARGET" == *"windows"* ]]; then
-            PREFIX=""
-            EXT=".dll"
+            BIN_EXT=".exe"
+            LIB_PREFIX=""
+            LIB_EXT=".dll"
+          elif [[ "$TARGET" == *"apple"* ]]; then
+            BIN_EXT=""
+            LIB_PREFIX="lib"
+            LIB_EXT=".dylib"
           else
-            PREFIX="lib"
-            EXT=".so"
+            BIN_EXT=""
+            LIB_PREFIX="lib"
+            LIB_EXT=".so"
           fi
           
           echo "::group::Building $TARGET ($SHORT)"
@@ -56,11 +62,21 @@ runs:
           
           cross build --release --target "$TARGET"
           
-          SRC_FILE="target/$TARGET/release/${PREFIX}${{ inputs.bin_name }}$EXT"
+          REL_DIR="target/$TARGET/release"
           
-          DST_FILE="${PREFIX}${{ inputs.bin_name }}-$SHORT$EXT"
+          SRC_BIN="$REL_DIR/${{ inputs.bin_name }}$BIN_EXT"
+          if [[ -f "$SRC_BIN" ]]; then
+            DST_BIN="${{ inputs.bin_name }}-$SHORT$BIN_EXT"
+            cp "$SRC_BIN" "$DST_BIN"
+            echo "Copied binary: $DST_BIN"
+          fi
           
-          cp "$SRC_FILE" "$DST_FILE"
-          echo "Built: $DST_FILE"
+          SRC_LIB="$REL_DIR/${LIB_PREFIX}${{ inputs.bin_name }}$LIB_EXT"
+          if [[ -f "$SRC_LIB" ]]; then
+            DST_LIB="${LIB_PREFIX}${{ inputs.bin_name }}-$SHORT$LIB_EXT"
+            cp "$SRC_LIB" "$DST_LIB"
+            echo "Copied library: $DST_LIB"
+          fi
+          
           echo "::endgroup::"
         done

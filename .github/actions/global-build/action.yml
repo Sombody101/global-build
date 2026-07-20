@@ -5,6 +5,10 @@ inputs:
   bin_name:
     description: 'Name of the binary to build'
     required: true
+  exclude_targets:
+    description: "Space-separated list of target keywords or triples to skip (e.g. 'windows musl')"
+    required: false
+    default: ""
 
 runs:
   using: "composite"
@@ -35,18 +39,27 @@ runs:
       shell: bash
       run: |
         MAP_PATH="${{ github.action_path }}/targets.json"
-        
+        EXCLUDES="${{ inputs.exclude_targets }}"
+
         for TARGET in $(jq -r 'keys[]' "$MAP_PATH"); do
           SHORT=$(jq -r ".\"$TARGET\"" "$MAP_PATH")
+          SKIP=0
+          for PATTERN in $EXCLUDES; do
+            if [[ "$TARGET" == *"$PATTERN"* ]]; then
+              echo "::notice::Skipping target '$TARGET' matching exclude pattern '$PATTERN'"
+              SKIP=1
+              break
+            fi
+          done
+
+          if [[ $SKIP -eq 1 ]]; then
+            continue
+          fi
           
           if [[ "$TARGET" == *"windows"* ]]; then
             BIN_EXT=".exe"
             LIB_PREFIX=""
             LIB_EXT=".dll"
-          elif [[ "$TARGET" == *"apple"* ]]; then
-            BIN_EXT=""
-            LIB_PREFIX="lib"
-            LIB_EXT=".dylib"
           else
             BIN_EXT=""
             LIB_PREFIX="lib"
